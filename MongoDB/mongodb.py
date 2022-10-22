@@ -24,14 +24,20 @@ class UserService(MongoDBService):
     def __init__(self):
         super().__init__()
 
-    def user_exists(self, email: str):
+    def login(self, email: str, password: str):
         existing_user = self._USERS.find_one({"email": email})
         if existing_user:
-            return {"error": "USER WITH EMAIL ALREADY EXISTS", "user_exists": True,
-                    "existing_user_id": existing_user.get("user_id")}
+            db_password = existing_user.get("password")
+            if password == db_password:
+                return {"error": None, "user_exists": True,
+                        "existing_user_id": existing_user.get("user_id")}
+            else:
+                return {
+                    "error": "WRONG PASSWORD", "user_exists": True, "existing_user_id": existing_user.get("user_id")
+                }
         return {"error": None, "user_exists": False, "existing_user_id": None}
 
-    def register_user(self, name: str, email: str, venmo_id: str):
+    def register_user(self, email: str, password: str, name: str, venmo_id: str):
         user_id = utils.generate_user_id()
         auth_id = utils.generate_auth_id()
 
@@ -39,6 +45,7 @@ class UserService(MongoDBService):
             "user_id": user_id,
             "name": name,
             "email": email,
+            "password": password,
             "venmo_id": venmo_id,
             "auth_id": auth_id,
             "jobs_posted": [],
@@ -66,13 +73,13 @@ class UserService(MongoDBService):
             "total_reward": user.get("total_reward")
         }
 
-    def job_posted(self, user_id: str, job_id: str):
+    def post_job(self, user_id: str, job_id: str):
         self._USERS.update_one({"user_id": user_id}, {
             "$push": {"jobs_posted": job_id}
         })
         return {"job_posted": True}
 
-    def job_helped(self, user_id: str, reward: int, job_id: str):
+    def help_job(self, user_id: str, reward: int, job_id: str):
         self._USERS.update_one({"user_id": user_id}, {
             "$inc": {"total_reward": reward},
             "$push": {"jobs_helped": job_id}
@@ -108,7 +115,7 @@ class JobService(MongoDBService):
 
         inserted_job = self._JOBS.insert_one(document=document)
 
-        userService.job_posted(helpee_id, job_id)
+        userService.post_job(helpee_id, job_id)
 
         print("USER CREATED WITH FOLLOWING INFO: ", inserted_job)
 
@@ -126,6 +133,15 @@ class JobService(MongoDBService):
             "helper_id": job.get("helper_id"),
             "status": job.get("status")
         }
+
+    def listup_jobs(self):
+        result = self._JOBS.find({"status": {"$eq": 0}})
+        result_list = list()
+        for r in result:
+            del r["_id"]
+            result_list.append(r)
+        print(result_list)
+        return result_list
 
     def select_job(self, job_id: str, helper_id: str):
         result = self._JOBS.find_one_and_update({"job_id": job_id}, {
@@ -152,7 +168,7 @@ class JobService(MongoDBService):
 
             print("TODO --- SEND VENMO PAYMENT TO", helper.get("venmo_id"))
 
-            userService.job_helped(helper.get("user_id"), job.get("reward"), job_id)
+            userService.help_job(helper.get("user_id"), job.get("reward"), job_id)
         else:
             return {"job_approved": False, "error": "AUTH CODE DOES NOT MATCH", "approved_job": None}
 
