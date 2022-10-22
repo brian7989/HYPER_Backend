@@ -30,10 +30,11 @@ class UserService(MongoDBService):
             db_password = existing_user.get("password")
             if password == db_password:
                 return {"error": None, "user_exists": True,
-                        "existing_user_id": existing_user.get("user_id")}
+                        "existing_user": self.find_user_by_id(existing_user.get("user_id"))}
             else:
                 return {
-                    "error": "WRONG PASSWORD", "user_exists": True, "existing_user": self.find_user_by_id(existing_user.get("user_id"))
+                    "error": "WRONG PASSWORD", "user_exists": True,
+                    "existing_user": self.find_user_by_id(existing_user.get("user_id"))
                 }
         return {"error": None, "user_exists": False, "existing_user": None}
 
