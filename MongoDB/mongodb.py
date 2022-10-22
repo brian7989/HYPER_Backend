@@ -41,6 +41,14 @@ class UserService(MongoDBService):
         user_id = utils.generate_user_id()
         auth_id = utils.generate_auth_id()
 
+        existing_email = self._USERS.find_one({"email": email})
+        existing_venmo_id = self._USERS.find_one({"venmo_id": venmo_id})
+
+        if existing_email:
+            return {"error": "EMAIL ALREADY EXISTS"}
+        elif existing_venmo_id:
+            return {"error": "VENMO ID ALREADY EXISTS"}
+
         document = {
             "user_id": user_id,
             "name": name,
@@ -62,6 +70,8 @@ class UserService(MongoDBService):
     def find_user_by_id(self, user_id: str):
         print("FINDING USER WITH ID ", user_id)
         user = self._USERS.find_one({"user_id": user_id})
+        if not user:
+            return {"error": "USER NOT FOUND"}
         return {
             "user_id": user.get("user_id"),
             "name": user.get("name"),
