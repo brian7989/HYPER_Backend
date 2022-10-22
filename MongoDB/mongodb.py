@@ -33,9 +33,9 @@ class UserService(MongoDBService):
                         "existing_user_id": existing_user.get("user_id")}
             else:
                 return {
-                    "error": "WRONG PASSWORD", "user_exists": True, "existing_user_id": existing_user.get("user_id")
+                    "error": "WRONG PASSWORD", "user_exists": True, "existing_user": self.find_user_by_id(existing_user.get("user_id"))
                 }
-        return {"error": None, "user_exists": False, "existing_user_id": None}
+        return {"error": None, "user_exists": False, "existing_user": None}
 
     def register_user(self, email: str, password: str, name: str, venmo_id: str):
         user_id = utils.generate_user_id()
