@@ -84,6 +84,13 @@ def approve_job():
     return job_service.approve_job(job_id, helper_auth_id)
 
 
+@app.route("/jobs/get_jobs_with_userid/", methods=["POST"])
+def get_jobs_with_userid():
+    data = request.form
+
+    user_id = data.get("user_id")
+    return job_service.get_jobs_for_userid(user_id=user_id)
+
 @app.route('/')
 def hello_world():  # put application's code here
     return 'Hello World!'

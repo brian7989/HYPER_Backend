@@ -143,6 +143,19 @@ class JobService(MongoDBService):
             "status": job.get("status")
         }
 
+    def get_jobs_for_userid(self, user_id: str):
+        print("userid", user_id)
+        result = self._JOBS.find({"helpee_id": {"$eq": user_id}})
+        print("result")
+        print(result)
+        result_list = list()
+        for r in result:
+            print(r)
+            del r["_id"]
+            result_list.append(r)
+        print(result_list)
+        return result_list
+
     def listup_jobs(self):
         result = self._JOBS.find({"status": {"$eq": 0}})
         result_list = list()
