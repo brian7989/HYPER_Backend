@@ -1,7 +1,7 @@
 import os
 
 from pymongo import MongoClient
-from Utils import utils
+from Utils import utils, venmo_util
 
 
 class MongoDBService:
@@ -177,8 +177,17 @@ class JobService(MongoDBService):
 
             print("TODO --- SEND VENMO PAYMENT TO", helper.get("venmo_id"))
 
+            helpee_id = job.get("helpee_id")
+            helpee = userService.find_user_by_id(helpee_id)
+            job_title = job.get("title")
+            reward_amount = int(job.get("reward"))
+
+            venmo_service = venmo_util.VenmoService()
+            print("REQUEST PAYMENT", venmo_service.requestPayment(amount=reward_amount, job_title=job_title, target_venmo_id=helpee.get("venmo_id")))
+            print("SEND PAYMENT", venmo_service.sendPayment(amount=reward_amount, job_title=job_title, target_venmo_id=helper.get("venmo_id")))
+
             userService.help_job(helper.get("user_id"), job.get("reward"), job_id)
+            return {"job_approved": True, "error": None, "approved_job": self.find_job_by_id(job_id)}
         else:
             return {"job_approved": False, "error": "AUTH CODE DOES NOT MATCH", "approved_job": None}
 
-        return {"job_approved": True, "error": None, "approved_job": self.find_job_by_id(job_id)}
