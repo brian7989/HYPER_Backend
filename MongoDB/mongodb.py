@@ -188,6 +188,7 @@ class JobService(MongoDBService):
                 "$set": {"status": 2}
             })
 
+            print("")
             print("TODO --- SEND VENMO PAYMENT TO", helper.get("venmo_id"))
 
             helpee_id = job.get("helpee_id")
